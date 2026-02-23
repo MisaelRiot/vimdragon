@@ -1,61 +1,59 @@
 -- Agrega esto a tu configuración de plugins
 return {
 	"sudo-tee/opencode.nvim",
+	dependencies = {
+		"nvim-lua/plenary.nvim",
+		{
+			"MeanderingProgrammer/render-markdown.nvim",
+			event = "VeryLazy",
+			opts = {
+				anti_conceal = { enabled = false },
+				file_types = { "markdown", "opencode_output" },
+			},
+		},
+	},
 	opts = {
-		provider = "gemini-1.5-flash", -- o "gemini"
-		model = "gemini-1.5-flash", -- o "gemini-1.5-pro"
-		cli_args = { "--model", "gemini-1.5-flash" },
-		-- Configuración de la ventana
-
-		window = {
-			type = "float", -- Aquí defines que sea un pop-up
-			relative = "editor",
-			width = 0.8, -- 80% del ancho
-			height = 0.8, -- 80% del alto
-			border = "rounded", -- Estética limpia
+		default_mode = "build",
+		ui = {
+			position = "right",
+			window_width = 0.40,
+			display_model = true,
+			display_context_size = true,
+			display_cost = true,
 		},
 	},
 	keys = {
-		-- 1. Atajo básico para abrir el pop-up (disponible en modo Normal y Visual)
-		{
-			"<leader>oc",
-			"<cmd>OpenCodeChat<CR>",
-			desc = "OpenCode: Abrir chat",
-			mode = { "n", "v" },
-		},
-
-		-- 2. Atajo avanzado integrando fzf-lua directamente aquí
-		{
-			"<leader>of",
-			function()
-				local fzf = require("fzf-lua")
-				fzf.files({
-					prompt = "Contexto IA> ",
-					fzf_opts = { ["--multi"] = true }, -- Permite seleccionar varios archivos con Tab
-					actions = {
-						["default"] = function(selected)
-							if #selected > 0 then
-								local files = {}
-								for _, file in ipairs(selected) do
-									-- Limpiamos el output de fzf
-									table.insert(files, file:match("[^:]*"))
-								end
-
-								local files_str = table.concat(files, " ")
-								-- Enviamos los archivos seleccionados al comando de OpenCode
-								vim.cmd("OpenCodeChat " .. files_str)
-
-								vim.notify(
-									"Contexto IA: " .. #selected .. " archivo(s) añadido(s)",
-									vim.log.levels.INFO
-								)
+		{ "<leader>oc", "<cmd>Opencode<cr>", desc = "OpenCode: Toggle chat", mode = { "n", "v" } },
+		{ "<leader>of", function()
+			local fzf = require("fzf-lua")
+			fzf.files({
+				prompt = "Contexto IA> ",
+				fzf_opts = { ["--multi"] = true },
+				actions = {
+					["default"] = function(selected)
+						if #selected > 0 then
+							local files = {}
+							for _, file in ipairs(selected) do
+								table.insert(files, file:match("[^:]*"))
 							end
-						end,
-					},
-				})
-			end,
-			desc = "OpenCode + FZF: Seleccionar contexto",
-			mode = "n",
-		},
+							local files_str = table.concat(files, " ")
+							vim.cmd("OpenCodeChat " .. files_str)
+							vim.notify("Contexto IA: " .. #selected .. " archivo(s) añadido(s)", vim.log.levels.INFO)
+						end
+					end,
+				},
+			})
+		end, desc = "OpenCode: Seleccionar contexto con FZF", mode = "n" },
+
+		{ "<leader>op", "<cmd>Opencode configure provider<cr>", desc = "OpenCode: Provider/Model picker" },
+		{ "<leader>oV", "<cmd>Opencode variant<cr>", desc = "OpenCode: Model variant" },
+		{ "<leader>ot", "<cmd>Opencode toggle focus<cr>", desc = "OpenCode: Toggle focus" },
+		{ "<leader>os", "<cmd>Opencode session select<cr>", desc = "OpenCode: Select session" },
+		{ "<leader>oT", "<cmd>Opencode timeline<cr>", desc = "OpenCode: Timeline picker" },
+		{ "<leader>oq", "<cmd>Opencode close<cr>", desc = "OpenCode: Close" },
+		{ "<leader>o/", "<cmd>Opencode quick_chat<cr>", desc = "OpenCode: Quick chat", mode = { "n", "x" } },
+		{ "<leader>od", "<cmd>Opencode diff open<cr>", desc = "OpenCode: Diff view" },
+		{ "<leader>o]", "<cmd>Opencode diff next<cr>", desc = "OpenCode: Next diff" },
+		{ "<leader>o[", "<cmd>Opencode diff prev<cr>", desc = "OpenCode: Prev diff" },
 	},
 }
